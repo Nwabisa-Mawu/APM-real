@@ -4,7 +4,7 @@ import { ProductService } from './product.service';
 import { Subscription } from 'rxjs';
 // decorator
 @Component({
-  selector: 'pm-products',
+  // removed the selectore because it will not be used as a directive, but a page to navigate to
   templateUrl: './product-list.component.html',
   styleUrls: ['./product-list.component.css']
 })
