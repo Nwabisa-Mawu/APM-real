@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
+import { Observable, catchError, tap, throwError } from 'rxjs';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { IProduct } from './product-interface';
-import { HttpClient } from '@angular/common/http';
 
 // injectable decorator used for the services
 @Injectable({
@@ -13,64 +14,35 @@ import { HttpClient } from '@angular/common/http';
 export class ProductService {
 
   // to provide the url that will be used to make the http request -  the place where our data is stored
-  private productUrl = '/src/api/products/products.json'
+  private productUrl = '/api/products/products.json'
 
   // injecting a service - to provide an instance of the HttpClient service - idnetify it as dependency in the constructor
   constructor(private http: HttpClient) { }
 
   // method that returns an array for products
-  getProducts(): IProduct[] {
-    return [
-      {
-        "productId": 1,
-        "productName": "Leaf Rake",
-        "productCode": "GDN-0011",
-        "releaseDate": "March 19, 2021",
-        "description": "Leaf rake with 48-inch wooden handle.",
-        "price": 19.95,
-        "starRating": 3.2,
-        "imageUrl": "assets/images/leaf_rake.png"
-      },
-      {
-        "productId": 2,
-        "productName": "Garden Cart",
-        "productCode": "GDN-0023",
-        "releaseDate": "March 18, 2021",
-        "description": "15 gallon capacity rolling garden cart",
-        "price": 32.99,
-        "starRating": 4.2,
-        "imageUrl": "assets/images/garden_cart.png"
-      },
-      {
-        "productId": 5,
-        "productName": "Hammer",
-        "productCode": "TBX-0048",
-        "releaseDate": "May 21, 2021",
-        "description": "Curved claw steel hammer",
-        "price": 8.9,
-        "starRating": 4.8,
-        "imageUrl": "assets/images/hammer.png"
-      },
-      {
-        "productId": 8,
-        "productName": "Saw",
-        "productCode": "TBX-0022",
-        "releaseDate": "May 15, 2021",
-        "description": "15-inch steel blade hand saw",
-        "price": 11.55,
-        "starRating": 3.7,
-        "imageUrl": "assets/images/saw.png"
-      },
-      {
-        "productId": 10,
-        "productName": "Video Game Controller",
-        "productCode": "GMG-0042",
-        "releaseDate": "October 15, 2020",
-        "description": "Standard two-button video game controller",
-        "price": 35.95,
-        "starRating": 4.6,
-        "imageUrl": "assets/images/xbox-controller.png"
-      }
-    ]
-  };
+  // make the return type of the getProduct method an Observable of the IProduct[] generic type.
+  getProducts(): Observable<IProduct[]> {
+    return this.http.get<IProduct[]>(this.productUrl).pipe(
+      // exception handling using Observable pipe methods - tap taps into observable stream and lets us look at the emitted values without transforming the stream - in this caes will log it to the console.
+      tap(data => console.log('All: ', JSON.stringify(data))),
+      // the catchError catches any error
+      catchError(this.handleError)
+    );  //set the generic parameter of the method to IProduct[] so that it can map the response in a way that we want the data.
+  }
+
+  // method for handling the error, can send to error log or alert on page etc.
+  private handleError(err: HttpErrorResponse) {
+    // In this case, we will just log the error to the console
+    let errorMessage = '';
+    if (err.error instanceof ErrorEvent) {
+      // a client-side or network error. handle it accordingly
+      errorMessage = `An error occurred: ${err.error.message}`;
+    } else {
+      // the backend returned an unsuccessful response code.
+      // The response may contain clues as to what went wrong
+      errorMessage = `Server returned code: ${err.status}, error message is: ${err.message}`;
+    }
+    console.error(errorMessage)
+    return throwError(() => errorMessage);
+  }
 }

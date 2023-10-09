@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { IProduct } from './product-interface';
 import { ProductService } from './product.service';
+import { Subscription } from 'rxjs';
 // decorator
 @Component({
   selector: 'pm-products',
@@ -8,7 +9,8 @@ import { ProductService } from './product.service';
   styleUrls: ['./product-list.component.css']
 })
   // the OnInit lifestyle hook will be used for the data store service to fetch the data
-export class ProductListComponent implements OnInit {
+  // the OnDestroy hook will be used to unsubscribe to the http request for data
+export class ProductListComponent implements OnInit, OnDestroy {
   // properties for the class used in the template
   pageTitle: string = 'Product List';
   // set the values of css properties of the images
@@ -18,6 +20,10 @@ export class ProductListComponent implements OnInit {
   showImage: boolean = false;
   // create an array that will hold the filtered list because we dont want to permanently change the original data list
   filteredProducts: IProduct[] = [];
+  // error message property to store the error message
+  errorMessage: string = '';
+  // property for the unsubscribing - the ! is for the definite assertion assignment operator that tells typescript that we will assign a value to this property later.
+  sub!: Subscription;
 
   // will use js getter and setter with a private variable for just them to take the value of the input, store it then return it to the page then will add filtering functionality to the setter
   private _listFilter: string = '';
@@ -62,9 +68,23 @@ export class ProductListComponent implements OnInit {
   // store the default value for the filter input here.
   ngOnInit(): void {
     // So use the OnInit lifecycle hook because it will call the data upon initial loading of the page.
-    this.products = this.productService.getProducts();
-    // assigned the initial value of products to the filtered products so that it shows on the page when it first loads.
-    this.filteredProducts = this.products;
+    // subscribe to the observable then assign the fetched value to the products variable - do this by creating methods/functions for the three responses of http requests, next, error and complete BUT http requests only run once so there will be no need to unsubscribe but it is recommended to do it for every situation.
+    // assign the sub property the va;lue of the data emitted when the subscribe method is called
+    this.sub = this.productService.getProducts().subscribe({
+      // first notification sent by the observable when the item is found and emitted
+      next: products => {
+        this.products = products;
+        // assigned the initial value of products to the filtered products so that it shows on the page when it first loads.
+        this.filteredProducts = this.products;
+      },
+      error: err => this.errorMessage = err
+    })
+  }
+
+  // define the OnDestroy method
+  ngOnDestroy(): void {
+    // then use the sub value/method to call the unsubscribe method
+    this.sub.unsubscribe();
   }
 
   // method to do the filter by taking the input from the getter then adjusting the UI to only show the products that match.
