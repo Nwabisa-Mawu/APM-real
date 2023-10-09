@@ -46,7 +46,8 @@
                 [style.margin.px]="imageMargin"
               />
             </td>
-            <td>{{ product.productName }}</td>
+            <!-- add square brackets around router link for the property binding for the id parameter that will be used to generate the details  -->
+            <td><a class="text-dark" [routerLink]="['/products', product.productId]">{{ product.productName }}</a></td>
             <!-- custom pipe that replaces dashes with spaces -->
             <td>
               {{ product.productCode | lowercase | ConvertToSpaces : "-" }}
